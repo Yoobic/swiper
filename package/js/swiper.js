@@ -7,7 +7,7 @@
  *
  * Released under the MIT License
  *
- * Released on: September 30, 2019
+ * Released on: October 16, 2019
  */
 
 (function (global, factory) {
@@ -2764,8 +2764,9 @@
       return;
     }
     if (data.isTouchEvent && e.type === 'mousemove') { return; }
-    var pageX = e.type === 'touchmove' ? e.targetTouches[0].pageX : e.pageX;
-    var pageY = e.type === 'touchmove' ? e.targetTouches[0].pageY : e.pageY;
+    var targetTouch = e.type === 'touchmove' && e.targetTouches[0] && (e.targetTouches[0] || e.changedTouches[0]);
+    var pageX = e.type === 'touchmove' ? targetTouch.pageX : e.pageX;
+    var pageY = e.type === 'touchmove' ? targetTouch.pageY : e.pageY;
     if (e.preventedByNestedSwiper) {
       touches.startX = pageX;
       touches.startY = pageY;
@@ -3318,6 +3319,9 @@
     swiper.emit('setTranslate', swiper.translate, false);
   }
 
+  var dummyEventAttached = false;
+  function dummyEventListener() {}
+
   function attachEvents() {
     var swiper = this;
     var params = swiper.params;
@@ -3349,6 +3353,10 @@
         el.addEventListener(touchEvents.end, swiper.onTouchEnd, passiveListener);
         if (touchEvents.cancel) {
           el.addEventListener(touchEvents.cancel, swiper.onTouchEnd, passiveListener);
+        }
+        if (!dummyEventAttached) {
+          doc.addEventListener('touchstart', dummyEventListener);
+          dummyEventAttached = true;
         }
       }
       if ((params.simulateTouch && !Device.ios && !Device.android) || (params.simulateTouch && !Support.touch && Device.ios)) {
@@ -6426,7 +6434,7 @@
         swiper.$wrapperEl.on('gestureend', '.swiper-slide', zoom.onGestureEnd, passiveListener);
       } else if (swiper.touchEvents.start === 'touchstart') {
         swiper.$wrapperEl.on(swiper.touchEvents.start, '.swiper-slide', zoom.onGestureStart, passiveListener);
-        swiper.$wrapperEl.on(swiper.touchEvents.move, '.swiper-slide', zoom.onGestureChange, passiveListener);
+        swiper.$wrapperEl.on(swiper.touchEvents.move, '.swiper-slide', zoom.onGestureChange, activeListenerWithCapture);
         swiper.$wrapperEl.on(swiper.touchEvents.end, '.swiper-slide', zoom.onGestureEnd, passiveListener);
         if (swiper.touchEvents.cancel) {
           swiper.$wrapperEl.on(swiper.touchEvents.cancel, '.swiper-slide', zoom.onGestureEnd, passiveListener);
@@ -6453,7 +6461,7 @@
         swiper.$wrapperEl.off('gestureend', '.swiper-slide', zoom.onGestureEnd, passiveListener);
       } else if (swiper.touchEvents.start === 'touchstart') {
         swiper.$wrapperEl.off(swiper.touchEvents.start, '.swiper-slide', zoom.onGestureStart, passiveListener);
-        swiper.$wrapperEl.off(swiper.touchEvents.move, '.swiper-slide', zoom.onGestureChange, passiveListener);
+        swiper.$wrapperEl.off(swiper.touchEvents.move, '.swiper-slide', zoom.onGestureChange, activeListenerWithCapture);
         swiper.$wrapperEl.off(swiper.touchEvents.end, '.swiper-slide', zoom.onGestureEnd, passiveListener);
         if (swiper.touchEvents.cancel) {
           swiper.$wrapperEl.off(swiper.touchEvents.cancel, '.swiper-slide', zoom.onGestureEnd, passiveListener);

@@ -2764,9 +2764,9 @@
       return;
     }
     if (data.isTouchEvent && e.type === 'mousemove') { return; }
-    var targetTouch = e.type === 'touchmove' && e.targetTouches[0] && (e.targetTouches[0] || e.changedTouches[0]);
-    var pageX = e.type === 'touchmove' ? targetTouch.pageX : e.pageX;
-    var pageY = e.type === 'touchmove' ? targetTouch.pageY : e.pageY;
+    var targetTouch = e.type === 'touchmove' && (e.targetTouches[0] || e.changedTouches[0]);
+    var pageX = e.type === 'touchmove' ? (targetTouch ? targetTouch.pageX : undefined) : e.pageX;
+    var pageY = e.type === 'touchmove' ? (targetTouch ? targetTouch.pageY: undefined) : e.pageY;
     if (e.preventedByNestedSwiper) {
       touches.startX = pageX;
       touches.startY = pageY;

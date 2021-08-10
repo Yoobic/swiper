@@ -7,8 +7,8 @@ function closestElement(selector, base = this) {
   function __closestFrom(el) {
     if (!el || el === getDocument() || el === getWindow()) return null;
     if (el.assignedSlot) el = el.assignedSlot;
-    const found = el.closest(selector);
-    return found || __closestFrom(el.getRootNode().host);
+    const found = el.closest(selector) || [];
+    return found[0] || __closestFrom(el.getRootNode().host);
   }
   return __closestFrom(base);
 }

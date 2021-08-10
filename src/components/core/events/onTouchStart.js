@@ -51,7 +51,7 @@ export default function onTouchStart(event) {
   if (
     params.noSwiping &&
     (isTargetShadow
-      ? closestElement(noSwipingSelector, e.target)
+      ? closestElement(noSwipingSelector, $targetEl)
       : $targetEl.closest(noSwipingSelector)[0])
   ) {
     swiper.allowClick = true;

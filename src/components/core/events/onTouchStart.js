@@ -5,7 +5,7 @@ import { extend, now } from '../../../utils/utils';
 // Modified from https://stackoverflow.com/questions/54520554/custom-element-getrootnode-closest-function-crossing-multiple-parent-shadowd
 function closestElement(selector, base = this) {
   function __closestFrom(el) {
-    if (!el || el === getDocument() || el === getWindow()) return null;
+    if (!el || !el.getRootNode || el === getDocument() || el === getWindow()) return null;
     if (el.assignedSlot) el = el.assignedSlot;
     const found = el.closest(selector) || [];
     return found[0] || __closestFrom(el.getRootNode().host);

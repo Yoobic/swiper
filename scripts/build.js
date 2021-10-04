@@ -1,4 +1,6 @@
 const chalk = require('chalk');
+const fs = require('fs-extra');
+const elapsed = require('elapsed-time-logger');
 
 const buildJsCore = require('./build-js-core');
 const buildJsBundle = require('./build-js-bundle');
@@ -9,39 +11,36 @@ const buildSvelte = require('./build-svelte');
 const buildStyles = require('./build-styles');
 const buildAngular = require('./build-angular');
 const outputCheckSize = require('./check-size');
-const setEnv = require('./utils/env');
+const { outputDir } = require('./utils/output-dir');
 
 class Build {
   constructor() {
     this.argv = process.argv.slice(2).map((v) => v.toLowerCase());
     this.size = this.argv.includes('--size');
-    const { outputDir } = setEnv();
-    this.outputDir = outputDir;
     this.tasks = [];
     return this;
   }
 
   add(flag, buildFn) {
     if (!this.argv.includes('--only') || this.argv.includes(flag)) {
-      this.tasks.push(buildFn);
+      this.tasks.push(() => buildFn());
     }
     return this;
   }
 
-  addMultipleFormats(flag, buildFn) {
-    return this.add(flag, async () =>
-      Promise.all(['esm', 'cjs'].map((format) => buildFn(format, this.outputDir))),
-    );
-  }
-
   async run() {
+    if (!this.argv.includes('--only')) {
+      await fs.remove(`./${outputDir}`);
+      await fs.ensureDir(`./${outputDir}`);
+    }
+    await fs.copy('./src/copy/', `./${outputDir}`);
     let start;
     let end;
     if (this.size) {
       start = outputCheckSize();
     }
 
-    const res = await Promise.all(this.tasks.map((v) => v())).catch((err) => {
+    const res = await Promise.all(this.tasks.map((buildFn) => buildFn())).catch((err) => {
       console.error(err);
       process.exit(1);
     });
@@ -59,15 +58,17 @@ class Build {
 }
 
 (async () => {
+  elapsed.start('build');
   const build = new Build();
   await build
+    .add('types', buildTypes)
+    .add('styles', buildStyles)
     .add('core', buildJsCore)
     .add('bundle', buildJsBundle)
-    .add('types', buildTypes)
-    .addMultipleFormats('react', buildReact)
-    .addMultipleFormats('vue', buildVue)
-    .addMultipleFormats('svelte', buildSvelte)
+    .add('react', buildReact)
+    .add('vue', buildVue)
+    .add('svelte', buildSvelte)
     .add('angular', buildAngular)
-    .add('styles', () => buildStyles(build.outputDir))
     .run();
+  elapsed.end('build', chalk.bold.green('Build completed'));
 })();

@@ -1,12 +1,18 @@
 import { h, ref, onMounted, onUpdated, onBeforeUnmount, watch, nextTick } from 'vue';
-import { getParams } from './get-params';
-import { initSwiper, mountSwiper } from './init-swiper';
-import { needsScrollbar, needsNavigation, needsPagination, uniqueClasses, extend } from './utils';
-import { renderLoop, calcLoopedSlides } from './loop';
-import { getChangedParams } from './get-changed-params';
-import { getChildren } from './get-children';
-import { updateSwiper } from './update-swiper';
-import { renderVirtual, updateOnVirtualData } from './virtual';
+import { getParams } from './get-params.js';
+import { initSwiper, mountSwiper } from './init-swiper.js';
+import {
+  needsScrollbar,
+  needsNavigation,
+  needsPagination,
+  uniqueClasses,
+  extend,
+} from './utils.js';
+import { renderLoop, calcLoopedSlides } from './loop.js';
+import { getChangedParams } from './get-changed-params.js';
+import { getChildren } from './get-children.js';
+import { updateSwiper } from './update-swiper.js';
+import { renderVirtual, updateOnVirtualData } from './virtual.js';
 
 const Swiper = {
   name: 'Swiper',
@@ -19,7 +25,7 @@ const Swiper = {
       type: String,
       default: 'div',
     },
-
+    modules: { type: Array, default: undefined },
     init: { type: Boolean, default: undefined },
     direction: { type: String, default: undefined },
     touchEventsTarget: { type: String, default: undefined },
@@ -29,7 +35,7 @@ const Swiper = {
     updateOnWindowResize: { type: Boolean, default: undefined },
     resizeObserver: { type: Boolean, default: undefined },
     nested: { type: Boolean, default: undefined },
-    focusableElements: { type: Boolean, default: undefined },
+    focusableElements: { type: String, default: undefined },
     width: { type: Number, default: undefined },
     height: { type: Number, default: undefined },
     preventInteractionOnTransition: { type: Boolean, default: undefined },
@@ -37,14 +43,6 @@ const Swiper = {
     url: { type: String, default: undefined },
     edgeSwipeDetection: { type: [Boolean, String], default: undefined },
     edgeSwipeThreshold: { type: Number, default: undefined },
-    freeMode: { type: Boolean, default: undefined },
-    freeModeMomentum: { type: Boolean, default: undefined },
-    freeModeMomentumRatio: { type: Number, default: undefined },
-    freeModeMomentumBounce: { type: Boolean, default: undefined },
-    freeModeMomentumBounceRatio: { type: Number, default: undefined },
-    freeModeMomentumVelocityRatio: { type: Number, default: undefined },
-    freeModeSticky: { type: Boolean, default: undefined },
-    freeModeMinimumVelocity: { type: Number, default: undefined },
     autoHeight: { type: Boolean, default: undefined },
     setWrapperSize: { type: Boolean, default: undefined },
     virtualTranslate: { type: Boolean, default: undefined },
@@ -52,10 +50,9 @@ const Swiper = {
     breakpoints: { type: Object, default: undefined },
     spaceBetween: { type: Number, default: undefined },
     slidesPerView: { type: [Number, String], default: undefined },
-    slidesPerColumn: { type: Number, default: undefined },
-    slidesPerColumnFill: { type: String, default: undefined },
     slidesPerGroup: { type: Number, default: undefined },
     slidesPerGroupSkip: { type: Number, default: undefined },
+    slidesPerGroupAuto: { type: Boolean, default: undefined },
     centeredSlides: { type: Boolean, default: undefined },
     centeredSlidesBounds: { type: Boolean, default: undefined },
     slidesOffsetBefore: { type: Number, default: undefined },
@@ -82,7 +79,6 @@ const Swiper = {
     resistance: { type: Boolean, default: undefined },
     resistanceRatio: { type: Number, default: undefined },
     watchSlidesProgress: { type: Boolean, default: undefined },
-    watchSlidesVisibility: { type: Boolean, default: undefined },
     grabCursor: { type: Boolean, default: undefined },
     preventClicks: { type: Boolean, default: undefined },
     preventClicksPropagation: { type: Boolean, default: undefined },
@@ -124,6 +120,8 @@ const Swiper = {
     cubeEffect: { type: Object, default: undefined },
     fadeEffect: { type: Object, default: undefined },
     flipEffect: { type: Object, default: undefined },
+    creativeEffect: { type: Object, default: undefined },
+    cardsEffect: { type: Object, default: undefined },
     hashNavigation: { type: [Boolean, Object], default: undefined },
     history: { type: [Boolean, Object], default: undefined },
     keyboard: { type: [Boolean, Object], default: undefined },
@@ -136,6 +134,8 @@ const Swiper = {
     thumbs: { type: Object, default: undefined },
     virtual: { type: [Boolean, Object], default: undefined },
     zoom: { type: [Boolean, Object], default: undefined },
+    grid: { type: [Object], default: undefined },
+    freeMode: { type: [Boolean, Object], default: undefined },
   },
   emits: [
     '_beforeBreakpoint',
@@ -157,9 +157,11 @@ const Swiper = {
     'breakpoint',
     'changeDirection',
     'click',
+    'disable',
     'doubleTap',
     'doubleClick',
     'destroy',
+    'enable',
     'fromEdge',
     'hashChange',
     'hashSet',
@@ -221,7 +223,7 @@ const Swiper = {
   setup(props, { slots: originalSlots, emit }) {
     const { tag: Tag, wrapperTag: WrapperTag } = props;
 
-    const containerClasses = ref('swiper-container');
+    const containerClasses = ref('swiper');
     const virtualData = ref(null);
     const breakpointChanged = ref(false);
     const initializedRef = ref(false);
@@ -270,6 +272,7 @@ const Swiper = {
       swiperRef.value.virtual.slides = slidesRef.value;
       const extendWith = {
         cache: false,
+        slides: slidesRef.value,
         renderExternal: (data) => {
           virtualData.value = data;
         },

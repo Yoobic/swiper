@@ -4,7 +4,6 @@ const rules = {
   'prefer-object-spread': 'off',
   'prefer-destructuring': 'off',
   'import/prefer-default-export': 'off',
-  'no-shadow': 'off',
   'guard-for-in': 'off',
   'no-restricted-syntax': 'off',
   'import/no-extraneous-dependencies': 'off',
@@ -15,6 +14,7 @@ const rules = {
   'react/no-array-index-key': 'off',
   'react/prop-types': 'off',
   'react/jsx-props-no-spreading': 'off',
+  'import/no-unresolved': [2, { ignore: ['ssr-window', 'dom7', 'swiper'] }],
 };
 module.exports = {
   env: {
@@ -61,6 +61,13 @@ module.exports = {
       rules: {
         ...rules,
         'no-restricted-globals': 'off',
+      },
+    },
+    {
+      files: ['src/**/*.*'],
+      rules: {
+        ...rules,
+        'import/extensions': [2, { js: 'always' }],
       },
     },
   ],

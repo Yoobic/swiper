@@ -1,6 +1,5 @@
 import React from 'react';
-// eslint-disable-next-line
-import Swiper from '../../core';
+import Swiper from 'swiper';
 
 function calcLoopedSlides(slides, swiperParams) {
   let slidesPerViewParams = swiperParams.slidesPerView;

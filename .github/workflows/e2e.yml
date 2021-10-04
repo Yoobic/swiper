@@ -1,9 +1,9 @@
 name: E2E
 on:
   push:
-    branches: [master, Swiper7]
+    branches: [master, Swiper6]
   pull_request:
-    branches: [master, Swiper7]
+    branches: [master, Swiper6]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
       - name: Run build dev
-        run: npm run build:dev
+        run: npm run build
       - name: Run build prod
         run: npm run build:prod
       - name: Run test

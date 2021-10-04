@@ -1,5 +1,5 @@
 import { h, ref, onMounted, onUpdated, onBeforeUpdate, computed, onBeforeUnmount } from 'vue';
-import { uniqueClasses } from './utils';
+import { uniqueClasses } from './utils.js';
 
 const SwiperSlide = {
   name: 'SwiperSlide',
@@ -8,7 +8,7 @@ const SwiperSlide = {
       type: String,
       default: 'div',
     },
-    swiperRef: Object,
+    swiperRef: { type: Object, required: false },
     zoom: { type: Boolean, default: undefined },
     virtualIndex: {
       type: [String, Number],

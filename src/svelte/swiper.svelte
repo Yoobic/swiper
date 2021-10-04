@@ -7,18 +7,24 @@
     tick,
     beforeUpdate,
   } from 'svelte';
-  import { getParams } from './get-params';
-  import { initSwiper, mountSwiper } from './init-swiper';
-  import { needsScrollbar, needsNavigation, needsPagination, uniqueClasses, extend } from './utils';
-  import { getChangedParams } from './get-changed-params';
-  import { updateSwiper } from './update-swiper';
+  import { getParams } from './get-params.js';
+  import { initSwiper, mountSwiper } from './init-swiper.js';
+  import {
+    needsScrollbar,
+    needsNavigation,
+    needsPagination,
+    uniqueClasses,
+    extend,
+  } from './utils.js';
+  import { getChangedParams } from './get-changed-params.js';
+  import { updateSwiper } from './update-swiper.js';
 
   const dispatch = createEventDispatcher();
 
   let className = undefined;
   export { className as class };
 
-  let containerClasses = 'swiper-container';
+  let containerClasses = 'swiper';
   let breakpointChanged = false;
   let swiperInstance = null;
   let oldPassedParams = null;
@@ -140,6 +146,7 @@
   });
 
   onDestroy(() => {
+    // eslint-disable-next-line
     if (typeof window !== 'undefined' && swiperInstance && !swiperInstance.destroyed) {
       swiperInstance.destroy(true, false);
     }

@@ -1,14 +1,15 @@
 /* eslint-disable no-restricted-globals */
 import React from 'react';
-import SwiperCore, { Navigation, Pagination, Scrollbar, A11y } from '../../build/core';
-import { Swiper, SwiperSlide } from '../../build/react';
-
-SwiperCore.use([Navigation, Pagination, Scrollbar, A11y]);
+// eslint-disable-next-line
+import { Navigation, Pagination, Scrollbar, A11y } from 'swiper';
+// eslint-disable-next-line
+import { Swiper, SwiperSlide } from 'swiper/react/swiper-react';
 
 const App = () => {
   return (
     <main>
       <Swiper
+        modules={[Navigation, Pagination, Scrollbar, A11y]}
         onSwiper={(swiper) => (window.swiper = swiper)}
         slidesPerView={3}
         spaceBetween={50}

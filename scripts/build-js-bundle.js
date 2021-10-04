@@ -1,7 +1,9 @@
 /* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
 /* eslint no-console: "off" */
 
-const fs = require('fs');
+const fs = require('fs-extra');
+const chalk = require('chalk');
+const elapsed = require('elapsed-time-logger');
 const { rollup } = require('rollup');
 const { default: babel } = require('@rollup/plugin-babel');
 const replace = require('@rollup/plugin-replace');
@@ -9,16 +11,19 @@ const { default: resolve } = require('@rollup/plugin-node-resolve');
 const Terser = require('terser');
 
 const config = require('./build-config');
-const banner = require('./banner')();
+const { outputDir } = require('./utils/output-dir');
+const { banner } = require('./utils/banner');
+const isProd = require('./utils/isProd')();
 
-async function buildBundle(components, format, browser, cb) {
-  const env = process.env.NODE_ENV || 'development';
-  const external = format === 'umd' || browser ? [] : () => true;
+async function buildEntry(modules, format, browser = false) {
+  const isUMD = format === 'umd';
+  const isESM = format === 'esm';
+  if (isUMD) browser = true;
+  const needSourceMap = isProd && (isUMD || (isESM && browser));
+  const external = isUMD || browser ? [] : () => true;
   let filename = 'swiper-bundle';
-  if (format !== 'umd') filename += `.${format}`;
-  if (format === 'esm' && browser) filename += '.browser';
-  const output = env === 'development' ? 'build' : 'package';
-  const needSourceMap = env === 'production' && (format === 'umd' || (format === 'esm' && browser));
+  if (isESM) filename += `.esm`;
+  if (isESM && browser) filename += '.browser';
 
   return rollup({
     input: './src/swiper.js',
@@ -26,18 +31,12 @@ async function buildBundle(components, format, browser, cb) {
     plugins: [
       replace({
         delimiters: ['', ''],
-        'process.env.NODE_ENV': JSON.stringify(env),
-        '//IMPORT_COMPONENTS': components
-          .map(
-            (component) =>
-              `import ${component.capitalized} from './components/${component.name}/${component.name}';`,
-          )
+        'process.env.NODE_ENV': JSON.stringify(isProd ? 'production' : 'development'),
+        '//IMPORT_MODULES': modules
+          .map((mod) => `import ${mod.capitalized} from './modules/${mod.name}/${mod.name}.js';`)
           .join('\n'),
-        '//INSTALL_COMPONENTS': components
-          .map((component) => `${component.capitalized}`)
-          .join(',\n  '),
-        '//EXPORT':
-          format === 'umd' ? 'export default Swiper;' : 'export default Swiper; export { Swiper }',
+        '//INSTALL_MODULES': modules.map((mod) => `${mod.capitalized}`).join(',\n  '),
+        '//EXPORT': isUMD ? 'export default Swiper;' : 'export default Swiper; export { Swiper }',
       }),
       resolve({ mainFields: ['module', 'main', 'jsnext'] }),
       babel({ babelHelpers: 'bundled' }),
@@ -50,22 +49,13 @@ async function buildBundle(components, format, browser, cb) {
         name: 'Swiper',
         strict: true,
         sourcemap: needSourceMap,
-        sourcemapFile: `./${output}/${filename}.js.map`,
-        banner,
-        file: `./${output}/${filename}.js`,
+        sourcemapFile: `./${outputDir}/${filename}.js.map`,
+        banner: banner(),
+        file: `./${outputDir}/${filename}.js`,
       }),
     )
     .then(async (bundle) => {
-      if (!browser && (format === 'cjs' || format === 'esm')) {
-        // Fix imports
-        const modularContent = fs
-          .readFileSync(`./${output}/${filename}.js`, 'utf-8')
-          .replace(/require\('\.\//g, `require('./${format}/`)
-          .replace(/from '\.\//g, `from './${format}/`);
-        fs.writeFileSync(`./${output}/${filename}.js`, modularContent);
-      }
-      if (env === 'development' || !browser) {
-        if (cb) cb();
+      if (!isProd || !browser) {
         return;
       }
       const result = bundle.output[0];
@@ -76,26 +66,28 @@ async function buildBundle(components, format, browser, cb) {
           url: `${filename}.min.js.map`,
         },
         output: {
-          preamble: banner,
+          preamble: banner(),
         },
       }).catch((err) => {
         console.error(`Terser failed on file ${filename}: ${err.toString()}`);
       });
 
-      fs.writeFileSync(`./${output}/${filename}.min.js`, code);
-      fs.writeFileSync(`./${output}/${filename}.min.js.map`, map);
-      if (cb) cb();
+      await fs.writeFile(`./${outputDir}/${filename}.min.js`, code);
+      await fs.writeFile(`./${outputDir}/${filename}.min.js.map`, map);
+    })
+    .then(async () => {
+      if (isProd && isESM && browser === false) return buildEntry(modules, format, true);
+      return true;
     })
     .catch((err) => {
-      if (cb) cb();
-      console.error(err.toString());
+      console.error('Rollup error:', err.stack);
     });
 }
 
-async function build() {
-  const env = process.env.NODE_ENV || 'development';
-  const components = [];
-  config.components.forEach((name) => {
+async function buildJsBundle() {
+  elapsed.start('bundle');
+  const modules = [];
+  config.modules.forEach((name) => {
     // eslint-disable-next-line
     const capitalized = name
       .split('-')
@@ -109,23 +101,14 @@ async function build() {
           .join('');
       })
       .join('');
-    const jsFilePath = `./src/components/${name}/${name}.js`;
+    const jsFilePath = `./src/modules/${name}/${name}.js`;
     if (fs.existsSync(jsFilePath)) {
-      components.push({ name, capitalized });
+      modules.push({ name, capitalized });
     }
   });
-  if (env === 'development') {
-    return Promise.all([
-      buildBundle(components, 'umd', true, () => {}),
-      buildBundle(components, 'esm', false, () => {}),
-    ]);
-  }
-  return Promise.all([
-    buildBundle(components, 'esm', false, () => {}),
-    buildBundle(components, 'esm', true, () => {}),
-    buildBundle(components, 'umd', true, () => {}),
-    buildBundle(components, 'cjs', false, () => {}),
-  ]);
+  return Promise.all([buildEntry(modules, 'umd'), buildEntry(modules, 'esm')]).then(() => {
+    elapsed.end('bundle', chalk.green('\nBundle build completed!'));
+  });
 }
 
-module.exports = build;
+module.exports = buildJsBundle;

@@ -4,12 +4,11 @@
 <head>
   <meta charset="UTF-8" />
   <title>Swiper Playground</title>
-  <link rel="stylesheet" href="../../build/swiper-bundle.css" />
   <meta name="viewport" content="width=device-width" />
 </head>
 
 <body>
-  <section class="swiper-container">
+  <section class="swiper">
     <div class="swiper-slide">Slide 1</div>
     <div class="swiper-slide">Slide 2</div>
     <div class="swiper-slide">Slide 3</div>
@@ -30,7 +29,7 @@
       height: 100%;
     }
 
-    .swiper-container {
+    .swiper {
       width: 100%;
       height: 300px;
       margin: 50px auto;
@@ -43,7 +42,27 @@
       line-height: 300px;
     }
   </style>
-  <script type="module" src="./main.js"></script>
+  <script type="module">
+    // eslint-disable-next-line
+    import 'swiper/swiper-bundle.css';
+
+    // eslint-disable-next-line
+    import Swiper from 'swiper/swiper-bundle.esm.js';
+
+    // eslint-disable-next-line
+    window.swiper = new Swiper({
+      el: '.swiper',
+      slideToClickedSlide: true,
+      grabCursor: true,
+      scrollbar: true,
+      createElements: true,
+      speed: 300,
+      pagination: true,
+      navigation: true,
+      spaceBetween: 20,
+    });
+
+  </script>
 </body>
 
 </html>

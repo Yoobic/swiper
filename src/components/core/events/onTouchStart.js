@@ -6,6 +6,9 @@ import { extend, now } from '../../../utils/utils';
 function closestElement(selector, base = this) {
   function __closestFrom(el) {
     if (!el || el === getDocument() || el === getWindow()) return null;
+    if (el.closest && el.closest(selector)) {
+      return el;
+    }
     if (el.assignedSlot) el = el.assignedSlot;
     const found = el.closest(selector);
     if (!found && !el.getRootNode) {

@@ -7,7 +7,7 @@
     "build:core": "node scripts/build --only core",
     "build:bundle": "node scripts/build --only bundle styles",
     "build:svelte": "node scripts/build --only svelte",
-    "prepare": "npm run build:prod",
+    "prepare": "npm run build:prod:core",
     "build:angular": "node scripts/build --only angular",
     "build:react": "node scripts/build --only react",
     "build:vue": "node scripts/build --only vue",

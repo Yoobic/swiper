@@ -1,4 +1,4 @@
-import { h, ref, onMounted, onUpdated, onBeforeUnmount, watch, nextTick } from 'vue';
+import { h, ref, onMounted, onUpdated, onBeforeUnmount, watch, nextTick, provide } from 'vue';
 import { getParams } from './get-params.js';
 import { initSwiper, mountSwiper } from './init-swiper.js';
 import {
@@ -50,6 +50,7 @@ const Swiper = {
     breakpoints: { type: Object, default: undefined },
     spaceBetween: { type: Number, default: undefined },
     slidesPerView: { type: [Number, String], default: undefined },
+    maxBackfaceHiddenSlides: { type: Number, default: undefined },
     slidesPerGroup: { type: Number, default: undefined },
     slidesPerGroupSkip: { type: Number, default: undefined },
     slidesPerGroupAuto: { type: Boolean, default: undefined },
@@ -90,6 +91,7 @@ const Swiper = {
     loopedSlides: { type: Number, default: undefined },
     loopFillGroupWithBlank: { type: Boolean, default: undefined },
     loopPreventsSlide: { type: Boolean, default: undefined },
+    rewind: { type: Boolean, default: undefined },
     allowSlidePrev: { type: Boolean, default: undefined },
     allowSlideNext: { type: Boolean, default: undefined },
     swipeHandler: { type: Boolean, default: undefined },
@@ -136,6 +138,7 @@ const Swiper = {
     zoom: { type: [Boolean, Object], default: undefined },
     grid: { type: [Object], default: undefined },
     freeMode: { type: [Boolean, Object], default: undefined },
+    enabled: { type: Boolean, default: undefined },
   },
   emits: [
     '_beforeBreakpoint',
@@ -143,11 +146,14 @@ const Swiper = {
     '_slideClass',
     '_slideClasses',
     '_swiper',
+    '_freeModeNoMomentumRelease',
     'activeIndexChange',
     'afterInit',
     'autoplay',
     'autoplayStart',
     'autoplayStop',
+    'autoplayPause',
+    'autoplayResume',
     'beforeDestroy',
     'beforeInit',
     'beforeLoopFix',
@@ -317,6 +323,8 @@ const Swiper = {
       }
       breakpointChanged.value = false;
     });
+
+    provide('swiper', swiperRef);
 
     // update on virtual update
     watch(virtualData, () => {

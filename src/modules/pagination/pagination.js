@@ -107,14 +107,14 @@ export default function Pagination({ swiper, extendParams, on, emit }) {
           `${bulletSize * (params.dynamicMainBullets + 4)}px`,
         );
         if (params.dynamicMainBullets > 1 && swiper.previousIndex !== undefined) {
-          dynamicBulletIndex += current - swiper.previousIndex;
+          dynamicBulletIndex += current - (swiper.previousIndex - swiper.loopedSlides || 0);
           if (dynamicBulletIndex > params.dynamicMainBullets - 1) {
             dynamicBulletIndex = params.dynamicMainBullets - 1;
           } else if (dynamicBulletIndex < 0) {
             dynamicBulletIndex = 0;
           }
         }
-        firstIndex = current - dynamicBulletIndex;
+        firstIndex = Math.max(current - dynamicBulletIndex, 0);
         lastIndex = firstIndex + (Math.min(bullets.length, params.dynamicMainBullets) - 1);
         midIndex = (lastIndex + firstIndex) / 2;
       }
@@ -153,7 +153,7 @@ export default function Pagination({ swiper, extendParams, on, emit }) {
             bullets.eq(i).addClass(`${params.bulletActiveClass}-main`);
           }
           if (swiper.params.loop) {
-            if (bulletIndex >= bullets.length - params.dynamicMainBullets) {
+            if (bulletIndex >= bullets.length) {
               for (let i = params.dynamicMainBullets; i >= 0; i -= 1) {
                 bullets.eq(bullets.length - i).addClass(`${params.bulletActiveClass}-main`);
               }
@@ -300,7 +300,7 @@ export default function Pagination({ swiper, extendParams, on, emit }) {
     }
 
     $el.addClass(params.modifierClass + params.type);
-    $el.addClass(params.modifierClass + swiper.params.direction);
+    $el.addClass(swiper.isHorizontal() ? params.horizontalClass : params.verticalClass);
 
     if (params.type === 'bullets' && params.dynamicBullets) {
       $el.addClass(`${params.modifierClass}${params.type}-dynamic`);
@@ -338,7 +338,7 @@ export default function Pagination({ swiper, extendParams, on, emit }) {
 
     $el.removeClass(params.hiddenClass);
     $el.removeClass(params.modifierClass + params.type);
-    $el.removeClass(params.modifierClass + swiper.params.direction);
+    $el.removeClass(swiper.isHorizontal() ? params.horizontalClass : params.verticalClass);
     if (swiper.pagination.bullets && swiper.pagination.bullets.removeClass)
       swiper.pagination.bullets.removeClass(params.bulletActiveClass);
     if (params.clickable) {

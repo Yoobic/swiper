@@ -1,10 +1,11 @@
 @import '../../swiper-vars.scss';
-
-:root {
-  --swiper-navigation-size: 44px;
-  /*
+@at-root {
+  :root {
+    --swiper-navigation-size: 44px;
+    /*
   --swiper-navigation-color: var(--swiper-theme-color);
   */
+  }
 }
 .swiper-button-prev,
 .swiper-button-next {
@@ -29,7 +30,6 @@
     font-size: var(--swiper-navigation-size);
     text-transform: none !important;
     letter-spacing: 0;
-    text-transform: none;
     font-variant: initial;
     line-height: 1;
   }

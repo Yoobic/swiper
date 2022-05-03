@@ -8,6 +8,7 @@ export default function EffectCards({ swiper, extendParams, on }) {
     cardsEffect: {
       slideShadows: true,
       transformEl: null,
+      rotate: true,
     },
   });
 
@@ -35,18 +36,22 @@ export default function EffectCards({ swiper, extendParams, on }) {
 
       let tXAdd = 8 - Math.abs(progress) * 0.75;
 
+      const slideIndex =
+        swiper.virtual && swiper.params.virtual.enabled ? swiper.virtual.from + i : i;
+
       const isSwipeToNext =
-        (i === activeIndex || i === activeIndex - 1) &&
+        (slideIndex === activeIndex || slideIndex === activeIndex - 1) &&
         progress > 0 &&
         progress < 1 &&
         (isTouched || swiper.params.cssMode) &&
         currentTranslate < startTranslate;
       const isSwipeToPrev =
-        (i === activeIndex || i === activeIndex + 1) &&
+        (slideIndex === activeIndex || slideIndex === activeIndex + 1) &&
         progress < 0 &&
         progress > -1 &&
         (isTouched || swiper.params.cssMode) &&
         currentTranslate > startTranslate;
+
       if (isSwipeToNext || isSwipeToPrev) {
         const subProgress = (1 - Math.abs((Math.abs(progress) - 0.5) / 0.5)) ** 0.5;
         rotate += -28 * progress * subProgress;
@@ -72,9 +77,10 @@ export default function EffectCards({ swiper, extendParams, on }) {
 
       const scaleString =
         progress < 0 ? `${1 + (1 - scale) * progress}` : `${1 - (1 - scale) * progress}`;
+
       const transform = `
         translate3d(${tX}, ${tY}, ${tZ}px)
-        rotateZ(${rotate}deg)
+        rotateZ(${params.rotate ? rotate : 0}deg)
         scale(${scaleString})
       `;
 

@@ -259,7 +259,7 @@ export interface SwiperOptions {
    *
    * @default 0
    *
-   * @note If you use "margin" css property to the elements which go into Swiper in which you pass "spaceBetween" into, navigation might not work property.
+   * @note If you use "margin" css property to the elements which go into Swiper in which you pass "spaceBetween" into, navigation might not work properly.
    */
   spaceBetween?: number;
 
@@ -271,6 +271,15 @@ export interface SwiperOptions {
    * @default 1
    */
   slidesPerView?: number | 'auto';
+
+  /**
+   * If total number of slides less than specified here value, then Swiper will enable `backface-visibility: hidden` on slide elements to reduce visual "flicker" in Safari.
+   *
+   * @note It is not recommended to enable it on large amount of slides as it will reduce performance
+   *
+   * @default 10
+   */
+  maxBackfaceHiddenSlides?: number;
 
   /**
    * Set numbers of slides to define and enable group sliding. Useful to use with slidesPerView > 1
@@ -596,9 +605,18 @@ export interface SwiperOptions {
    *
    * @default false
    *
-   * @note If you use it along with `slidesPerView: 'auto'` then you need to specify `loopedSlides` parameter with amount of slides to loop (duplicate)
+   * @note If you use it along with `slidesPerView: 'auto'` then you need to specify `loopedSlides` parameter with amount of slides to loop (duplicate). Should not be used together with `rewind` mode
    */
   loop?: boolean;
+
+  /**
+   * Set to `true` to enable "rewind" mode. When enabled, clicking "next" navigation button (or calling `.slideNext()`) when on last slide will slide back to the first slide. Clicking "prev" navigation button (or calling `.slidePrev()`) when on first slide will slide forward to the last slide.
+   *
+   * @default false
+   *
+   * @note Should not be used together with `loop` mode
+   */
+  rewind?: boolean;
 
   /**
    * Addition number of slides that will be cloned after creating of loop

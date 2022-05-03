@@ -16,6 +16,7 @@ export default function A11y({ swiper, extendParams, on }) {
       containerRoleDescriptionMessage: null,
       itemRoleDescriptionMessage: null,
       slideRole: 'group',
+      id: null,
     },
   });
 
@@ -97,7 +98,7 @@ export default function A11y({ swiper, extendParams, on }) {
   }
 
   function updateNavigation() {
-    if (swiper.params.loop || !swiper.navigation) return;
+    if (swiper.params.loop || swiper.params.rewind || !swiper.navigation) return;
     const { $nextEl, $prevEl } = swiper.navigation;
 
     if ($prevEl && $prevEl.length > 0) {
@@ -121,19 +122,19 @@ export default function A11y({ swiper, extendParams, on }) {
   }
 
   function hasPagination() {
-    return (
-      swiper.pagination &&
-      swiper.params.pagination.clickable &&
-      swiper.pagination.bullets &&
-      swiper.pagination.bullets.length
-    );
+    return swiper.pagination && swiper.pagination.bullets && swiper.pagination.bullets.length;
+  }
+
+  function hasClickablePagination() {
+    return hasPagination() && swiper.params.pagination.clickable;
   }
 
   function updatePagination() {
     const params = swiper.params.a11y;
-    if (hasPagination()) {
-      swiper.pagination.bullets.each((bulletEl) => {
-        const $bulletEl = $(bulletEl);
+    if (!hasPagination()) return;
+    swiper.pagination.bullets.each((bulletEl) => {
+      const $bulletEl = $(bulletEl);
+      if (swiper.params.pagination.clickable) {
         makeElFocusable($bulletEl);
         if (!swiper.params.pagination.renderBullet) {
           addElRole($bulletEl, 'button');
@@ -142,8 +143,13 @@ export default function A11y({ swiper, extendParams, on }) {
             params.paginationBulletMessage.replace(/\{\{index\}\}/, $bulletEl.index() + 1),
           );
         }
-      });
-    }
+      }
+      if ($bulletEl.is(`.${swiper.params.pagination.bulletActiveClass}`)) {
+        $bulletEl.attr('aria-current', 'true');
+      } else {
+        $bulletEl.removeAttr('aria-current');
+      }
+    });
   }
 
   const initNavEl = ($el, wrapperId, message) => {
@@ -154,6 +160,18 @@ export default function A11y({ swiper, extendParams, on }) {
     }
     addElLabel($el, message);
     addElControls($el, wrapperId);
+  };
+
+  const handleFocus = (e) => {
+    const slideEl = e.target.closest(`.${swiper.params.slideClass}`);
+    if (!slideEl || !swiper.slides.includes(slideEl)) return;
+    const isActive = swiper.slides.indexOf(slideEl) === swiper.activeIndex;
+    const isVisible =
+      swiper.params.watchSlidesProgress &&
+      swiper.visibleSlides &&
+      swiper.visibleSlides.includes(slideEl);
+    if (isActive || isVisible) return;
+    swiper.slideTo(swiper.slides.indexOf(slideEl), 0);
   };
 
   function init() {
@@ -172,7 +190,7 @@ export default function A11y({ swiper, extendParams, on }) {
 
     // Wrapper
     const $wrapperEl = swiper.$wrapperEl;
-    const wrapperId = $wrapperEl.attr('id') || `swiper-wrapper-${getRandomNumber(16)}`;
+    const wrapperId = params.id || $wrapperEl.attr('id') || `swiper-wrapper-${getRandomNumber(16)}`;
     const live = swiper.params.autoplay && swiper.params.autoplay.enabled ? 'off' : 'polite';
     addElId($wrapperEl, wrapperId);
     addElLive($wrapperEl, live);
@@ -216,13 +234,16 @@ export default function A11y({ swiper, extendParams, on }) {
     }
 
     // Pagination
-    if (hasPagination()) {
+    if (hasClickablePagination()) {
       swiper.pagination.$el.on(
         'keydown',
         classesToSelector(swiper.params.pagination.bulletClass),
         onEnterOrSpaceKey,
       );
     }
+
+    // Tab focus
+    swiper.$el.on('focus', handleFocus, true);
   }
   function destroy() {
     if (liveRegion && liveRegion.length > 0) liveRegion.remove();
@@ -243,13 +264,16 @@ export default function A11y({ swiper, extendParams, on }) {
     }
 
     // Pagination
-    if (hasPagination()) {
+    if (hasClickablePagination()) {
       swiper.pagination.$el.off(
         'keydown',
         classesToSelector(swiper.params.pagination.bulletClass),
         onEnterOrSpaceKey,
       );
     }
+
+    // Tab focus
+    swiper.$el.off('focus', handleFocus, true);
   }
 
   on('beforeInit', () => {
@@ -261,13 +285,8 @@ export default function A11y({ swiper, extendParams, on }) {
   on('afterInit', () => {
     if (!swiper.params.a11y.enabled) return;
     init();
-    updateNavigation();
   });
-  on('toEdge', () => {
-    if (!swiper.params.a11y.enabled) return;
-    updateNavigation();
-  });
-  on('fromEdge', () => {
+  on('fromEdge toEdge afterInit lock unlock', () => {
     if (!swiper.params.a11y.enabled) return;
     updateNavigation();
   });

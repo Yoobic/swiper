@@ -13,7 +13,7 @@ export interface PaginationMethods {
    * HTML elements. To get specific slide HTMLElement
    * use `swiper.pagination.bullets[1]`.
    */
-  bullets: Dom7Array[];
+  bullets: Dom7Array;
 
   /**
    * Render pagination layout
@@ -120,13 +120,13 @@ export interface PaginationOptions {
    * format fraction pagination current number. Function receives current number,
    * and you need to return formatted value
    */
-  formatFractionCurrent?: (number: number) => number;
+  formatFractionCurrent?: (number: number) => number | string;
 
   /**
    * format fraction pagination total number. Function receives total number, and you
    * need to return formatted value
    */
-  formatFractionTotal?: (number: number) => number;
+  formatFractionTotal?: (number: number) => number | string;
 
   /**
    * This parameter allows totally customize pagination bullets, you need to pass here a function that accepts `index` number of

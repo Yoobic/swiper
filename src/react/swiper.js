@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, forwardRef } from 'react';
+import SwiperCore from 'swiper';
 import { getParams } from './get-params.js';
-import { initSwiper, mountSwiper } from './init-swiper.js';
+import { mountSwiper } from './mount-swiper.js';
 import {
   needsScrollbar,
   needsNavigation,
@@ -14,6 +15,7 @@ import { getChildren } from './get-children.js';
 import { updateSwiper } from './update-swiper.js';
 import { renderVirtual, updateOnVirtualData } from './virtual.js';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.js';
+import { SwiperContext } from './context.js';
 
 const Swiper = forwardRef(
   (
@@ -56,11 +58,11 @@ const Swiper = forwardRef(
       },
     });
 
-    if (!swiperElRef.current) {
+    const initSwiper = () => {
       // init swiper
       Object.assign(swiperParams.on, events);
       eventsAssigned = true;
-      swiperRef.current = initSwiper(swiperParams);
+      swiperRef.current = new SwiperCore(swiperParams);
       swiperRef.current.loopCreate = () => {};
       swiperRef.current.loopDestroy = () => {};
       if (swiperParams.loop) {
@@ -77,6 +79,10 @@ const Swiper = forwardRef(
         extend(swiperRef.current.params.virtual, extendWith);
         extend(swiperRef.current.originalParams.virtual, extendWith);
       }
+    };
+
+    if (!swiperElRef.current) {
+      initSwiper();
     }
 
     // Listen for breakpoints change
@@ -118,6 +124,9 @@ const Swiper = forwardRef(
         externalElRef.current = swiperElRef.current;
       }
       if (!swiperElRef.current) return;
+      if (swiperRef.current.destroyed) {
+        initSwiper();
+      }
 
       mountSwiper(
         {
@@ -192,23 +201,27 @@ const Swiper = forwardRef(
         className={uniqueClasses(`${containerClasses}${className ? ` ${className}` : ''}`)}
         {...restProps}
       >
-        {slots['container-start']}
-        {needsNavigation(swiperParams) && (
-          <>
-            <div ref={prevElRef} className="swiper-button-prev" />
-            <div ref={nextElRef} className="swiper-button-next" />
-          </>
-        )}
-        {needsScrollbar(swiperParams) && <div ref={scrollbarElRef} className="swiper-scrollbar" />}
-        {needsPagination(swiperParams) && (
-          <div ref={paginationElRef} className="swiper-pagination" />
-        )}
-        <WrapperTag className="swiper-wrapper">
-          {slots['wrapper-start']}
-          {renderSlides()}
-          {slots['wrapper-end']}
-        </WrapperTag>
-        {slots['container-end']}
+        <SwiperContext.Provider value={swiperRef.current}>
+          {slots['container-start']}
+          {needsNavigation(swiperParams) && (
+            <>
+              <div ref={prevElRef} className="swiper-button-prev" />
+              <div ref={nextElRef} className="swiper-button-next" />
+            </>
+          )}
+          {needsScrollbar(swiperParams) && (
+            <div ref={scrollbarElRef} className="swiper-scrollbar" />
+          )}
+          {needsPagination(swiperParams) && (
+            <div ref={paginationElRef} className="swiper-pagination" />
+          )}
+          <WrapperTag className="swiper-wrapper">
+            {slots['wrapper-start']}
+            {renderSlides()}
+            {slots['wrapper-end']}
+          </WrapperTag>
+          {slots['container-end']}
+        </SwiperContext.Provider>
       </Tag>
     );
   },

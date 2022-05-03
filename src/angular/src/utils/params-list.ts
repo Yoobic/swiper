@@ -26,6 +26,7 @@ export const paramsList = [
   'breakpoints',
   '_spaceBetween',
   '_slidesPerView',
+  'maxBackfaceHiddenSlides',
   '_grid',
   '_slidesPerGroup',
   '_slidesPerGroupSkip',
@@ -66,6 +67,7 @@ export const paramsList = [
   '_loopedSlides',
   '_loopFillGroupWithBlank',
   'loopPreventsSlide',
+  '_rewind',
   '_allowSlidePrev',
   '_allowSlideNext',
   '_swipeHandler',
@@ -112,4 +114,5 @@ export const paramsList = [
   '_thumbs',
   'virtual',
   'zoom',
+  'on',
 ];

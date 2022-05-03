@@ -27,6 +27,7 @@ const paramsList = [
   'breakpoints',
   '_spaceBetween',
   '_slidesPerView',
+  'maxBackfaceHiddenSlides',
   '_grid',
   '_slidesPerGroup',
   '_slidesPerGroupSkip',
@@ -68,6 +69,7 @@ const paramsList = [
   '_loopedSlides',
   '_loopFillGroupWithBlank',
   'loopPreventsSlide',
+  '_rewind',
   '_allowSlidePrev',
   '_allowSlideNext',
   '_swipeHandler',
@@ -94,7 +96,7 @@ const paramsList = [
 
   // modules
   'a11y',
-  'autoplay',
+  '_autoplay',
   '_controller',
   'coverflowEffect',
   'cubeEffect',
